@@ -1,0 +1,109 @@
+---
+title: My dynamic report
+output: html_fragment
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, error=FALSE)
+
+```
+
+```{css}
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #f5f7fa;
+  color: #333333;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+h1 {
+  text-align: center;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 10px;
+}
+
+pre, code {
+  background-color: #1e1e1e;
+  color: #00ffcc;
+  border-radius: 8px;
+  padding: 10px;
+}
+}
+```
+
+## Handrail holding data
+
+My data is to explore the pattern of whether people hold the handrail when they use stairs.
+
+I collected the group size data: this is to see when people walk on stairs in groups, whether there's any pattern on handrail holding.
+
+There's also data on whether people's hands are empty and how that affects the handrail holding.
+
+```{r}
+library(tidyverse)
+file_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1BavVbYWBXSALcglqptWMrTA0jPJ2qFF7NtlZIFLnr1lnSkUlG9vgLfTCyxmrmbvnifWx6kH_WpbW/pub?gid=793996782&single=true&output=csv"
+logged_data <- read.csv(file_url)
+
+```
+
+```{r}
+# rename the attributes
+latest_data <- logged_data %>%
+  rename(
+    hold_rail = 2,
+    hand_empty = 3,
+    group_size = 4
+  )
+
+```
+
+```{r}
+# some interesting key numbers
+no_of_records <- 
+  length(latest_data$hold_rail)
+max_group_size <- 
+  max(latest_data$group_size)
+min_group_size <- 
+  min(latest_data$group_size)
+
+yes_count <- sum(latest_data$hold_rail == "Yes", na.rm = TRUE)
+no_count  <- sum(latest_data$hold_rail == "No", na.rm = TRUE)
+
+```
+
+```{r}
+# two charts: 
+# 1st one is to see how the group size affect the rail holding decision
+latest_data %>%
+  ggplot(aes(fill = hold_rail, x = group_size)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Do they hold the handrail more as group size increases?", subtitle = "STATS 220, 2026",
+       x = "group size", 
+       fill = "did they hold the rail") +
+  theme(legend.position = "bottom", legend.direction = "vertical") 
+
+# 2nd one is to see when people hold the rail or not, if their hands are empty
+# Interesting to note when both of their hands are full, they are definitely not holding the hand rail!
+latest_data %>%
+  ggplot(aes(fill = hand_empty, x = hold_rail)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Do they hold the handrail when their hands are empty?", subtitle = "STATS 220, 2026",
+       x = "did they hold the rail", 
+       fill = "are their hands empty") +
+  theme(legend.position = "bottom", legend.direction = "vertical") +
+  coord_flip()
+
+```
+
+I have collect in total `r no_of_records` responses.
+
+The group size ranges from `r min_group_size` to `r max_group_size`.
+
+In summary, there are `r yes_count` people held the hand rail, while far more people (`r no_count`) didn't.
